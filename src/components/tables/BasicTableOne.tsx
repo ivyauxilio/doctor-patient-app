@@ -1,9 +1,12 @@
 "use client"
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchPatients } from '@/store/slices/patientSlice';
+import { fetchPatients,deletePatient  } from '@/store/slices/patientSlice';
 import { RootState, AppDispatch } from '@/store/store';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import Pagination from "@/components/pagination/Pagination";
+import EditPatientModal from "@/components/modal/EditPatientModal";
+import Swal from 'sweetalert2';
 
 import {
   Table,
@@ -126,7 +129,13 @@ const tableData: Order[] = [
 
 // const BasicTableOne: React.FC<BasicTableOneProps> = () => {
 export default function BasicTableOne() {
-  
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<PatientData | null>(null);  
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentPageFromURL = parseInt(searchParams.get('page') || '1');
+  const [page, setPage] = useState(currentPageFromURL);
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "MMMM d, yyyy, h:mm a");
   };
@@ -135,9 +144,15 @@ export default function BasicTableOne() {
     const [search, setSearch] = useState('');
     const { data, total, current_page, loading, error } = useSelector((state: RootState) => state.patients);
     
-    useEffect(() => {
-      dispatch(fetchPatients({ page: 1, search }));
-    }, [dispatch]);
+  useEffect(() => {
+      // if (current_page && current_page !== page) {
+      //     setPage(current_page);
+      // }
+    // 
+    const newPage = parseInt(searchParams.get('page') || '1');
+    if (newPage !== page) setPage(newPage);
+    dispatch(fetchPatients({ page, search }));
+    }, [dispatch,searchParams]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
@@ -145,9 +160,44 @@ export default function BasicTableOne() {
   };
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    dispatch(fetchPatients({ page: 1, search }));
+    dispatch(fetchPatients({ page, search }));
     console.log("se",search)
   };
+
+    const handleEdit = (patient: PatientData) => {
+      // You can use router.push to navigate to edit page
+      // if (!id) return;
+      console.log("click handle Edit", patient)
+      setSelectedPatient(patient);
+      setEditModalOpen(true);
+      // router.push(`/patients/edit/${id}`);
+    };
+  
+  const handleUpdateSave = async (updated: PatientData) => {
+      console.log("handleUpdateSave",updated)
+      // try {
+      //   await axios.put(`/api/patients/${updated.id}`, updated);
+      //   dispatch(fetchPatients({ page, search }));
+      // } catch (error) {
+      //   console.error("Failed to update patient", error);
+      //   alert("Failed to update patient.");
+      // }
+    };
+
+  const handleDelete = async (id?: number) => {
+        if (id === undefined) return;
+        Swal.fire({
+          title: 'Are you sure?',
+          text: 'This action cannot be undone!',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, delete it!',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(deletePatient(id));
+          }
+        });
+    };
   
   return (
     <div className='relative'>
@@ -211,6 +261,11 @@ export default function BasicTableOne() {
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
         <div className="max-w-full overflow-y-auto overflow-x-auto">
           <div className="w-full overflow-x-auto">
+             {loading && (
+                  <div className="flex justify-center py-4">
+                    <Spinner />
+                  </div>
+              )}
             <Table>
               {/* Table Header */}
               <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
@@ -219,7 +274,13 @@ export default function BasicTableOne() {
                     isHeader
                     className="px-5 py-3 font-bold text-gray-800 text-start text-theme-xs dark:text-gray-400"
                   >
-                    Date Created
+                    Actions
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-5 py-3 font-bold text-gray-800 text-start text-theme-xs dark:text-gray-400"
+                  >
+                    No.
                   </TableCell>
                   <TableCell
                     isHeader
@@ -335,22 +396,41 @@ export default function BasicTableOne() {
                   >
                     ANESTHESIOLOGIST
                   </TableCell> 
+                  <TableCell
+                    isHeader
+                    className="px-5 py-3 font-bold text-gray-800 text-start text-theme-xs dark:text-gray-400"
+                  >
+                    Date Created
+                  </TableCell>
                 </TableRow>
               </TableHeader>
 
               {/* Table Body */}
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                {/* {data.map((i) => (
-                  <p>{i.first_name}</p>
-                )) } */}
-                {data
+                {!loading && data
                   .filter((p) => p.created_at)
                   .slice()
                   .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
                   .map((i) => (
                   <TableRow key={i.id}>
+                    <TableCell className="px-4 py-3 text-start">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit(i)}
+                          className="px-2 py-1 text-xs text-white bg-green-600 rounded hover:bg-green-700"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(i.id)}
+                          className="px-2 py-1 text-xs text-white bg-red-600 rounded hover:bg-red-700"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.created_at && (formatDate(i.created_at))}
+                      {i.id}
                     </TableCell>
                     <TableCell className="px-5 py-4 sm:px-6 text-start">
                       <div className="flex items-center gap-3">
@@ -426,7 +506,10 @@ export default function BasicTableOne() {
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                       {i.anesthesiologist}
-                    </TableCell> 
+                      </TableCell> 
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      {i.created_at && (formatDate(i.created_at))}
+                    </TableCell>
                     {/* <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                       <div className="flex -space-x-2">
                         {order.team.images.map((teamImage, index) => (
@@ -469,8 +552,57 @@ export default function BasicTableOne() {
           </div>
         </div>
       </div>
+      <Pagination
+        page={page}
+        total={total || 0}
+        perPage={10}
+        onPageChange={(newPage:number) => {
+          setPage(newPage);
+          dispatch(fetchPatients({ page: newPage, search }));
+        }}
+      />
+
+        {/* {!loading && total && (
+            <div className="flex justify-center items-center mt-4 space-x-2">
+              {Array.from({ length: Math.ceil(total / 10) }, (_, index) => {
+                  const pageNumber = index + 1;
+                  return (
+                    <button
+                      key={pageNumber}
+                      onClick={() => {
+                        const newParams = new URLSearchParams(searchParams);
+                        newParams.set('page', pageNumber.toString());
+                        router.push(`?${newParams.toString()}`);
+                        setPage(pageNumber)
+                        // dispatch(fetchPatients({ page, search }));
+                      }}
+                      className={`px-3 py-1 rounded-md border transition-colors duration-200 ${
+                        page === pageNumber
+                          ? 'bg-blue-600 text-white border-blue-700'
+                          : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300'
+                      }`}
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                })}
+            </div>
+        )} */}
+      
+      <EditPatientModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        patient={selectedPatient}
+        onSave={handleUpdateSave}
+      />
+  
     </div>
   );
 }
 
+function Spinner() {
+  return (
+    <span style={{ display: 'inline-block', width: 20, height: 20, border: '2px solid #ccc', borderTopColor: '#333', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+  );
+}
 // export default BasicTableOne;

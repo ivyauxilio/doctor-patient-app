@@ -1,16 +1,24 @@
 "use client"
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import Label from '@/components/form/Label';
 import Input from '@/components/form/input/InputField';
 import Select from '@/components/form/Select';
 import TextArea from "@/components/form/input/TextArea";
 import DatePicker from '@/components/form/date-picker';
 import Button from "@/components/ui/button/Button";
+import Swal from 'sweetalert2';
 import { ChevronDownIcon, BoxIcon, CheckCircleIcon, EyeCloseIcon, EyeIcon, TimeIcon } from '@/icons';
 import ComponentCard from '@/components/common/ComponentCard';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/store/store';
 import { createPatient, PatientData } from '@/lib/api';
+import { updatePatient } from "@/store/slices/patientSlice";
 
-export default function Registration() {
+interface Props {
+  patient?: PatientData | null;
+}
+
+export default function Registration({ patient }: Props) {
 	const [message, setMessage] = useState("");
 	const [formData, setFormData] = useState<PatientData>({
     user_id: 1,
@@ -35,7 +43,14 @@ export default function Registration() {
     on_findings: '',
     histopath: '',
     anesthesiologist: '',
-  });
+	});
+	
+	useEffect(() => {
+    if (patient) {
+      setFormData(patient);
+    }
+	}, [patient]);
+	const dispatch = useDispatch<AppDispatch>();
 	const [token, setToken] = useState<string>('');
 	const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -74,24 +89,58 @@ export default function Registration() {
 			...formData,
 			user_id: userId ? parseInt(userId) : null,
 		};
-    try {
-			const result = await createPatient(updatedFormData);
-      setMessage('Patient successfully added!');
-      console.log(result);
-    } catch (error: any) {
-      console.error(error.response?.data || error.message);
-      setMessage('Error creating patient.');
-    }
+
+		try {
+			let result;
+			if (formData.id) {
+				// Editing an existing patient
+				result = await dispatch(updatePatient({ updatedData: formData, id: formData.id, })).unwrap();
+				console.log("formedit", formData)
+				setMessage('Patient successfully updated!');
+				document.getElementById("editPatient")?.style.setProperty("display", "none");
+				document.body.style.overflow = '';
+				Swal.fire({
+					icon: 'success',
+					title: 'Updated!',
+					text: 'Patient updated successfully.',
+				});
+			} else {
+				// Creating a new patient
+				result = await createPatient(updatedFormData);
+				setMessage('Patient successfully added!');
+				Swal.fire({
+					icon: 'success',
+					title: 'Updated!',
+					text: 'Patient successfully added!',
+				});
+			}
+		} catch (error: any) {
+			console.error(error.response?.data || error.message);
+			setMessage('Error saving patient.');
+			Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Something went wrong!',
+      });
+		}
+    // try {
+		// 	let result = await createPatient(updatedFormData);
+    //   setMessage('Patient successfully added!');
+    //   console.log(result);
+    // } catch (error: any) {
+    //   console.error(error.response?.data || error.message);
+    //   setMessage('Error creating patient.');
+    // }
   };
 	
 	return(
-		<ComponentCard title="Add new patient information">
+		<ComponentCard title="Patient information">
 			<form onSubmit={handleSubmit}>
 			<div className="space-y-6">
 				<div className='flex items-center space-x-4'>
 					<div className='w-1/3'> 
 						<Label>First Name</Label>
-						<Input type="text" name="first_name" onChange={handleChange}/>
+						<Input type="text" value={formData.first_name} name="first_name" onChange={handleChange}/>
 					</div>
 					{/* <div className='w-1/3'> 
 						<Label>Middle Name</Label>
@@ -99,7 +148,7 @@ export default function Registration() {
 						</div> */}
 					<div className='w-1/3'> 
 						<Label>Last Name</Label>
-						<Input type="text" name="last_name" onChange={handleChange}/>
+						<Input type="text" value={formData.last_name} name="last_name" onChange={handleChange}/>
 					</div>
 				</div>
 				<div className='flex items-center space-x-4'>
@@ -108,6 +157,7 @@ export default function Registration() {
 							<div className="relative">
 								<Select
 									options={options}
+									value={formData.sex}
 									placeholder="Select an option"
 									onChange={handleSelectChange}
 									className="dark:bg-dark-900"
@@ -119,11 +169,11 @@ export default function Registration() {
 						</div>
 						<div className='w-1/6 md:w-auto'> 
 							<Label>Age</Label>
-							<Input name="age" type="number" onChange={handleChange}/>
+							<Input name="age" value={formData.age.toString()} type="number" onChange={handleChange}/>
 						</div>
 						<div> 
 							<Label>Phone Number</Label>
-							<Input type="text" name="telephone_number" onChange={handleChange}/>
+							<Input type="text" value={formData.telephone_number}  name="telephone_number" onChange={handleChange}/>
 						</div>
 						<div>
 
@@ -131,7 +181,7 @@ export default function Registration() {
 					</div>	
 					<div>
 						<Label>Address</Label>
-						<Input type="text" name="address" onChange={handleChange}/>
+						<Input type="text" value={formData.address} name="address" onChange={handleChange}/>
 					</div>
 					<div>
 						<Label>Chief Complain</Label>
@@ -219,7 +269,7 @@ export default function Registration() {
 						</div>
 					<div> 
 						<Label>Place of Surgery</Label>
-						<Input type="text" name="surgery_place" onChange={handleChange}/>
+						<Input type="text" value={formData.surgery_place} name="surgery_place" onChange={handleChange}/>
 					</div>
 					<div>
 						<Label>On Findings</Label>
@@ -239,7 +289,7 @@ export default function Registration() {
 					</div>
 					<div> 
 						<Label>ANESTHESIOLOGIST</Label>
-						<Input type="text" name="anesthesiologist" onChange={handleChange}/>
+						<Input type="text" value={formData.anesthesiologist} name="anesthesiologist" onChange={handleChange}/>
 					</div>
 					<div className="flex items-center justify-end gap-5">
 							<Button size="sm" variant="success" startIcon={<CheckCircleIcon />}>

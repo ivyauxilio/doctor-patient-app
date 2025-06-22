@@ -5,10 +5,11 @@ import { ArrowDownIcon, ArrowUpIcon, BoxIconLine, GroupIcon } from "@/icons";
 
 interface EcommerceMetricsProps {
   total: number | null;
+  today_total: number | null;
 }
 
 // export const EcommerceMetrics = () => {
-export const EcommerceMetrics: React.FC<EcommerceMetricsProps> = ({ total }) => {  
+export const EcommerceMetrics: React.FC<EcommerceMetricsProps> = ({ total, today_total }) => {  
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
       {/* <!-- Metric Item Start --> */}
@@ -22,14 +23,15 @@ export const EcommerceMetrics: React.FC<EcommerceMetricsProps> = ({ total }) => 
             <span className="text-sm text-gray-500 dark:text-gray-400">
               Patients
             </span>
+
+          </div>
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
               {total}
             </h4>
-          </div>
-          <Badge color="success">
+          {/* <Badge color="success">
             <ArrowUpIcon />
             11.01%
-          </Badge>
+          </Badge> */}
         </div>
       </div>
       {/* <!-- Metric Item End --> */}
@@ -44,15 +46,15 @@ export const EcommerceMetrics: React.FC<EcommerceMetricsProps> = ({ total }) => 
             <span className="text-sm text-gray-500 dark:text-gray-400">
               Walk-in Today
             </span>
-            <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
-              5,359
-            </h4>
           </div>
+           <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
+              {today_total}
+            </h4>
 
-          <Badge color="error">
+          {/* <Badge color="error">
             <ArrowDownIcon className="text-error-500" />
             9.05%
-          </Badge>
+          </Badge> */}
         </div>
       </div>
       {/* <!-- Metric Item End --> */}

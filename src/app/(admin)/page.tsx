@@ -22,7 +22,7 @@ const metadata: Metadata = {
 export default function Ecommerce() {
   const dispatch = useDispatch<AppDispatch>();
   const [search, setSearch] = useState('');
-  const { data, total, current_page, loading, error } = useSelector((state: RootState) => state.patients);
+  const { data, total,today_total, current_page, loading, error } = useSelector((state: RootState) => state.patients);
   
   useEffect(() => {
     dispatch(fetchPatients({ page: 1, search }));
@@ -31,10 +31,10 @@ export default function Ecommerce() {
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-6">
       <div className="col-span-12 space-y-6 xl:col-span-7">
-        <EcommerceMetrics total={total} />
+        <EcommerceMetrics total={total} today_total={today_total} />
 
         {/* <MonthlySalesChart /> */}
-        <Registration />
+        <Registration/>
       </div>
 
       <div className="col-span-12 xl:col-span-5">
