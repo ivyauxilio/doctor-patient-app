@@ -72,7 +72,7 @@ export default function Pagination({ page, total, perPage = 10, onPageChange }: 
             onClick={() => changePage(Number(p))}
             className={`px-3 py-1 rounded-md border transition-colors duration-200 ${
               page === p
-                ? 'bg-blue-600 text-white border-blue-700'
+                ? 'bg-brand-500 text-white border-green-700'
                 : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300'
             }`}
           >

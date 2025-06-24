@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+// import { useSelector, useDispatch } from 'react-redux';
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchPatients,deletePatient  } from '@/store/slices/patientSlice';
 import { RootState, AppDispatch } from '@/store/store';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
@@ -140,10 +141,14 @@ export default function BasicTableOne() {
     return format(new Date(dateString), "MMMM d, yyyy, h:mm a");
   };
   const pathname = usePathname();
-    const dispatch = useDispatch<AppDispatch>();
-    const [search, setSearch] = useState('');
-    const { data, total, current_page, loading, error } = useSelector((state: RootState) => state.patients);
-    
+  // const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
+  const [search, setSearch] = useState('');
+  const roles = useAppSelector((state) => state.user.roles);
+  const { data, total, current_page, loading, error } = useAppSelector((state) => state.patients);
+  const isDoctorOrAdmin = roles.includes("doctor") || roles.includes("admin");
+  const isDashboard = pathname === "/";
+  
   useEffect(() => {
       // if (current_page && current_page !== page) {
       //     setPage(current_page);
@@ -160,7 +165,7 @@ export default function BasicTableOne() {
   };
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    dispatch(fetchPatients({ page, search }));
+    dispatch(fetchPatients({ page:0, search }));
     console.log("se",search)
   };
 
@@ -261,21 +266,23 @@ export default function BasicTableOne() {
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
         <div className="max-w-full overflow-y-auto overflow-x-auto">
           <div className="w-full overflow-x-auto">
-             {loading && (
+             {/* {loading && (
                   <div className="flex justify-center py-4">
                     <Spinner />
                   </div>
-              )}
+              )} */}
+            {loading ? <PatientsSkeletonTable /> : 
             <Table>
               {/* Table Header */}
-              <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+              <TableHeader className="bg-gray-100 border-b border-gray-100 dark:border-white/[0.05]">
                 <TableRow>
+                  {isDoctorOrAdmin && !isDashboard && (
                   <TableCell
                     isHeader
                     className="px-5 py-3 font-bold text-gray-800 text-start text-theme-xs dark:text-gray-400"
                   >
                     Actions
-                  </TableCell>
+                  </TableCell>)}
                   <TableCell
                     isHeader
                     className="px-5 py-3 font-bold text-gray-800 text-start text-theme-xs dark:text-gray-400"
@@ -407,12 +414,13 @@ export default function BasicTableOne() {
 
               {/* Table Body */}
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                {!loading && data
+                {data
                   .filter((p) => p.created_at)
                   .slice()
                   .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
                   .map((i) => (
                   <TableRow key={i.id}>
+                    {isDoctorOrAdmin && !isDashboard && (
                     <TableCell className="px-4 py-3 text-start">
                       <div className="flex gap-2">
                         <button
@@ -428,7 +436,7 @@ export default function BasicTableOne() {
                           Delete
                         </button>
                       </div>
-                    </TableCell>
+                    </TableCell>  )}
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                       {i.id}
                     </TableCell>
@@ -548,7 +556,8 @@ export default function BasicTableOne() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+              </Table>
+            }
           </div>
         </div>
       </div>
@@ -602,7 +611,60 @@ export default function BasicTableOne() {
 
 function Spinner() {
   return (
-    <span style={{ display: 'inline-block', width: 20, height: 20, border: '2px solid #ccc', borderTopColor: '#333', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-  );
+    <div className="flex flex-col items-center justify-center py-10">
+      {/* <FaSpinner className="animate-spin text-blue-500 text-4xl mb-4" /> */}
+      <span className='text-4xl mb-4' style={{ display: 'inline-block', width: 20, height: 20, border: '2px solid #ccc', borderTopColor: '#333', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <p className="text-sm text-gray-600">Loading patients...</p>
+    </div>
+    );
 }
-// export default BasicTableOne;
+const PatientsSkeleton = () => {
+  return (
+    <div className="space-y-2 mt-6">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="animate-pulse flex items-center gap-4 p-4 border rounded-lg">
+          <div className="h-10 w-10 bg-gray-300 rounded-full"></div>
+          <div className="flex-1">
+            <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+const PatientsSkeletonTable = () => {
+  return (
+    <div className="overflow-x-auto mt-6">
+      <table className="min-w-full border-collapse">
+        {/* <thead>
+          <tr className="bg-gray-100 text-left">
+            <th className="p-3 text-sm font-medium text-gray-700">Name</th>
+            <th className="p-3 text-sm font-medium text-gray-700">Age</th>
+            <th className="p-3 text-sm font-medium text-gray-700">Gender</th>
+            <th className="p-3 text-sm font-medium text-gray-700">Status</th>
+          </tr>
+        </thead> */}
+        <tbody>
+          {[...Array(10)].map((_, i) => (
+            <tr key={i} className="animate-pulse border-t">
+              <td className="p-3">
+                <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+              </td>
+              <td className="p-3">
+                <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+              </td>
+              <td className="p-3">
+                <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+              </td>
+              <td className="p-3">
+                <div className="h-4 bg-gray-300 rounded w-2/3"></div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+

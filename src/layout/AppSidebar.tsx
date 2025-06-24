@@ -44,11 +44,11 @@ const navItems: NavItem[] = [
     path: "/patients"
     // subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
   },
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
-  },
+  // {
+  //   icon: <UserCircleIcon />,
+  //   name: "User Profile",
+  //   path: "/profile",
+  // },
   {
     icon: <PageIcon />,
     name: "Medical Certificate",
@@ -302,7 +302,8 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`lg:block w-64 fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`lg:block w-64 fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 
+        bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
         ${
           isExpanded || isMobileOpen
             ? "w-[290px]"
@@ -315,21 +316,24 @@ const AppSidebar: React.FC = () => {
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div
-        className={`py-8 flex  ${
+      {/* <div
+        className={`py-8 flex 
+          ${
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-        }`}
+        }
+          `}
       >
-        <Link href="/">
+        <Link href="/" className="flex items-center space-x-3 overflow-hidden">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <Image
                 className="dark:hidden"
-                src="/images/logo/logo.svg"
+                src="/images/logo/logo-icon.svg"
                 alt="Logo"
-                width={150}
-                height={40}
+              width={40}
+              height={40}
               />
+              <h1 className="text-2xl ml-3">Doctor's App</h1>
               <Image
                 className="hidden dark:block"
                 src="/images/logo/logo-dark.svg"
@@ -345,6 +349,26 @@ const AppSidebar: React.FC = () => {
               width={32}
               height={32}
             />
+            )}
+        </Link>
+      </div> */}
+      <div
+        className={`py-8 px-4 flex 
+          ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"}
+        `}
+      >
+        <Link href="/" className="flex items-center space-x-3 overflow-hidden">
+          <Image
+            className="dark:hidden flex-shrink-0"
+            src="/images/logo/logo-icon.svg"
+            alt="Logo"
+            width={32}
+            height={32}
+          />
+          {(isExpanded || isHovered || isMobileOpen) && (
+            <h1 className="text-2xl whitespace-nowrap overflow-hidden text-ellipsis">
+              Doctor's App
+            </h1>
           )}
         </Link>
       </div>

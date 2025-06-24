@@ -1,17 +1,27 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState,useEffect  } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
+
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchUser } from "@/store/slices/userSlice";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
 
-function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
-  e.stopPropagation();
-  setIsOpen((prev) => !prev);
-}
+  const dispatch = useAppDispatch();
+  const { user, roles, permissions, loading } = useAppSelector((state) => state.user);
+
+  useEffect(() => {
+    dispatch(fetchUser());
+  }, [dispatch]);
+
+  function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+    e.stopPropagation();
+    setIsOpen((prev) => !prev);
+  }
 
   function closeDropdown() {
     setIsOpen(false);
@@ -26,12 +36,14 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
           <Image
             width={44}
             height={44}
-            src="/images/user/user-04.jpg"
+            src="/images/user/doctor-icon.png"
             alt="User"
           />
         </span>
 
-        <span className="block mr-1 font-medium text-theme-sm">Ivy</span>
+        <span className="block mr-1 font-medium text-theme-sm">
+           {user?.name ? user.name.slice(0, 10) + (user.name.length > 10 ? "..." : "") : "Guest"}
+        </span>
 
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
@@ -60,10 +72,10 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
       >
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            Ivy Auxilio
+            {user?.name ?? "Guest"}
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            ivyauxilio-dev@gmail.com
+            {user?.email ?? "Email"}
           </span>
         </div>
 {/* 
