@@ -273,7 +273,8 @@ export default function BasicTableOne() {
               )} */}
             {loading ? <PatientsSkeletonTable /> : 
             <Table>
-              {/* Table Header */}
+                {data && data.length > 0 ? (
+                  <>
               <TableHeader className="bg-gray-100 border-b border-gray-100 dark:border-white/[0.05]">
                 <TableRow>
                   {isDoctorOrAdmin && !isDashboard && (
@@ -412,7 +413,6 @@ export default function BasicTableOne() {
                 </TableRow>
               </TableHeader>
 
-              {/* Table Body */}
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                 {data
                   .filter((p) => p.created_at)
@@ -474,46 +474,46 @@ export default function BasicTableOne() {
                       {i.telephone_number}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.chief_complaint}
+                      {i.chief_complaint ?? 'N/A'}
                     </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.hpi}
+                      {i.hpi ?? 'N/A' }
                     </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.nos}
+                      {i.nos ?? 'N/A'}
                     </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.pmhx}
+                      {i.pmhx ?? 'N/A'}
                     </TableCell>
                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.pe}
+                      {i.pe ?? 'N/A'}
                     </TableCell>
                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.lab_diagnostic}
+                      {i.lab_diagnostic ?? 'N/A'}
                     </TableCell>
                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.impression}
+                      {i.impression ?? 'N/A'}
                     </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.treatment_plan}
+                      {i.treatment_plan ?? 'N/A'}
                     </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.surgical_procedure}
+                      {i.surgical_procedure ?? 'N/A'}
                     </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.surgery_date}
+                      {i.surgery_date ?? 'N/A'}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.surgery_place}
+                      {i.surgery_place ?? 'N/A'}
                     </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.on_findings}
+                      {i.on_findings ?? 'N/A'}
                     </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.histopath}
+                      {i.histopath ?? 'N/A'}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.anesthesiologist}
+                      {i.anesthesiologist ?? 'N/A'}
                       </TableCell> 
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                       {i.created_at && (formatDate(i.created_at))}
@@ -554,8 +554,18 @@ export default function BasicTableOne() {
                       {order.budget}
                     </TableCell> */}
                   </TableRow>
-                ))}
-              </TableBody>
+                  ))}
+                </TableBody>
+                </>
+                ) : (
+                    <TableBody>
+                  <TableRow>
+                    <TableCell className="px-4 py-6 text-center text-gray-500">
+                      No patient found.
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              )}
               </Table>
             }
           </div>

@@ -21,16 +21,26 @@ export default function AuthLayout({
               {/* <!-- ===== Common Grid Shape Start ===== --> */}
               <GridShape />
               <div className="flex flex-col items-center max-w-xs">
-                <Link href="/" className="block mb-4">
-                  <Image
+                <Link href="/" className="flex block mb-4">
+                  {/* <Image
                     width={231}
                     height={48}
-                    src="./images/logo/auth-logo.svg"
+                    src="./images/logo/logo.svg"
                     alt="Logo"
-                  />
+                  /> */}
+                    <Image
+                      className="dark:hidden flex-shrink-0"
+                      src="/images/logo/logo-icon.svg"
+                      alt="Logo"
+                      width={32}
+                      height={32}
+                    />
+                      <h1 className=" dark:text-white/90 text-2xl ml-3 text-white whitespace-nowrap overflow-hidden text-ellipsis">
+                        Doctor's App
+                      </h1>
                 </Link>
                 <p className="text-center text-gray-400 dark:text-white/60">
-                  Free and Open-Source Tailwind CSS Admin Dashboard Template
+                  Doctor's Clinic Information System (DCIS) is a specialized software solution designed to streamline and manage the day-to-day operations of a medical clinic.
                 </p>
               </div>
             </div>

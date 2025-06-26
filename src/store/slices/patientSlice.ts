@@ -58,6 +58,14 @@ export const fetchPatients = createAsyncThunk(
   // }
 );
 
+export const createPatient = createAsyncThunk(
+  'patients/create',
+  async (data: PatientData, thunkAPI) => {
+    const response = await api.post('/patients', data);
+    return response.data;
+  }
+);
+
 export const updatePatient = createAsyncThunk(
   'patients/updatePatient',
   async ({ updatedData, id }: { updatedData: PatientData;id: number; }, thunkAPI) => {
@@ -89,6 +97,9 @@ const patientSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(createPatient.fulfilled, (state, action) => {
+      state.data.push(action.payload.data); // Add new patient to the list
+      })
       .addCase(fetchPatients.pending, (state) => {
         state.loading = true;
         state.error = null;

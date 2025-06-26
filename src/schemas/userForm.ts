@@ -21,7 +21,7 @@ export const patientFormSchema = z.object({
   lab_diagnostic: z.string().optional(),
   impression: z.string().optional(),
   treatment_plan: z.string().optional(),
-  surgical_proceduree: z.string().optional(),
+  surgical_procedure: z.string().optional(),
   surgery_date: z
     .string()
     .optional()
@@ -36,4 +36,4 @@ export const patientFormSchema = z.object({
 });
 
 
-export type UserFormData = z.infer<typeof patientFormSchema>;
+export type PatientFormType = z.infer<typeof patientFormSchema>;

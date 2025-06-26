@@ -59,6 +59,11 @@ const navItems: NavItem[] = [
     name: "Rx",
     path: "/prescription",
   },
+  {
+    icon: <UserCircleIcon />,
+    name: "User List",
+    path: "/userlist",
+  },
 
   // {
   //   name: "Forms",
@@ -366,7 +371,7 @@ const AppSidebar: React.FC = () => {
             height={32}
           />
           {(isExpanded || isHovered || isMobileOpen) && (
-            <h1 className="text-2xl whitespace-nowrap overflow-hidden text-ellipsis">
+            <h1 className="dark:text-white/90 text-2xl whitespace-nowrap overflow-hidden text-ellipsis">
               Doctor's App
             </h1>
           )}
