@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/hooks/useAuth";
 import Checkbox from "@/components/form/input/Checkbox";
@@ -8,6 +8,9 @@ import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
+import Swal from 'sweetalert2';
+import useAuth from '@/hooks/useAuth';
+import useRequireAuth from '@/hooks/useRequireAuth';
 
 export default function SignInForm() {
   const router = useRouter();
@@ -16,22 +19,38 @@ export default function SignInForm() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const { isAuthenticated } = useRequireAuth();
+
+    // useEffect(() => {
+    //   if (!isAuthenticated) {
+    //     router.push('/signin'); // 🔐 redirect if not authenticated
+    //     return;
+    //   } else {
+    //      router.push('/'); 
+    //   }
+    //   console.log('isAuthenticated',isAuthenticated)
+    // }, [isAuthenticated]);
+  
+    // if (!isAuthenticated) {
+    //   return null; // 🔒 Don't render component if not logged in
+    // }
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("waiting")
     const res = await login(email, password);
     if (res.success) {
-      router.push("/dashboard");
+      router.push("/");
     } else {
       setError(res.message || "Login failed");
+      Swal.fire({ icon: 'error', title: 'Login failed', text: 'Please try again' });
     } 
   };
 
 
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
-      <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
+      {/* <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
         <Link
           href="/"
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
@@ -39,7 +58,7 @@ export default function SignInForm() {
           <ChevronLeftIcon />
           Back to dashboard
         </Link>
-      </div>
+      </div> */}
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8">

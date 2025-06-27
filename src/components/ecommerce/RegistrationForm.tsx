@@ -45,10 +45,24 @@ const initialFormData: PatientData = {
   anesthesiologist: '',
 };
 
-export default function Registration1({ patient }: Props) {
-	const [message, setMessage] = useState("");
-const [formData, setFormData] = useState<PatientData>(initialFormData);
+const showLoadingModal = () => {
+  Swal.fire({
+    title: 'Please wait...',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    },
+  });
+};
 
+const closeLoadingModal = () => {
+  Swal.close();
+};
+
+export default function Registration({ patient }: Props) {
+	const [message, setMessage] = useState("");
+	const [formData, setFormData] = useState<PatientData>(initialFormData);
+	const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 	const [errors, setErrors] = useState<{ [key: string]: string }>({});
   // const [message, setMessage] = useState("");
   const dispatch = useDispatch<AppDispatch>();
@@ -84,16 +98,21 @@ const [formData, setFormData] = useState<PatientData>(initialFormData);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+		e.preventDefault();
+		showLoadingModal();
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
+			setErrors(validationErrors);
+			closeLoadingModal();
+			Swal.fire({ icon: 'error', title: 'Oops...', text: 'Something went wrong!' });
       return;
     }
 
     const userId = localStorage.getItem('user_id');
     if (!userId) {
-      setMessage('User not logged in. Please login again.');
+			setMessage('User not logged in. Please login again.');
+			closeLoadingModal();
+			Swal.fire({ icon: 'error', title: 'Oops...', text: 'User not logged in. Please login again.' });
       return;
     }
 
@@ -103,19 +122,30 @@ const [formData, setFormData] = useState<PatientData>(initialFormData);
     };
 
     try {
-      if (formData.id) {
-        await dispatch(updatePatient({ updatedData: formData, id: formData.id })).unwrap();
-        setMessage('Patient successfully updated!');
+			if (formData.id) {
+				document.getElementById("editPatient")?.style.setProperty("display", "none");
+				document.body.style.overflow = '';
+				await dispatch(updatePatient({ updatedData: formData, id: formData.id })).unwrap();
+				await sleep(500);
+				closeLoadingModal();
+				setMessage('Patient successfully updated!');
+				
         Swal.fire({ icon: 'success', title: 'Updated!', text: 'Patient updated successfully.' });
       } else {
 				// await createPatient(updatedFormData);
+				await sleep(500);
+				closeLoadingModal();
 				await dispatch(createPatient(updatedFormData)).unwrap();
-        setMessage('Patient successfully added!');
+				setMessage('Patient successfully added!');
+				
 				Swal.fire({ icon: 'success', title: 'Success!', text: 'Patient successfully added!' });
 				setFormData(initialFormData);
       }
-    } catch (error: any) {
-      console.error(error.response?.data || error.message);
+		} catch (error: any) {
+			document.getElementById("editPatient")?.style.setProperty("display", "none");
+			document.body.style.overflow = '';
+			console.error(error.response?.data || error.message);
+			closeLoadingModal();
       setMessage('Error saving patient.');
       Swal.fire({ icon: 'error', title: 'Oops...', text: 'Something went wrong!' });
     }
@@ -132,7 +162,7 @@ const [formData, setFormData] = useState<PatientData>(initialFormData);
 			<div className="space-y-6">
 				<div className='flex items-center space-x-4'>
 					<div className='w-1/2'> 
-						<Label className="required-asterisk">First Name ivy</Label>
+						<Label className="required-asterisk">First Name</Label>
 							<Input type="text"
 								value={formData.first_name}
 								name="first_name"
@@ -185,7 +215,7 @@ const [formData, setFormData] = useState<PatientData>(initialFormData);
 					<div>
 						<Label>Chief Complain</Label>
 						<TextArea
-							value={formData.chief_complaint}
+							value={formData.chief_complaint ?? ""}
 							rows={3}
 							onChange={handleTextAreaChange("chief_complaint")}
 						/>
@@ -194,7 +224,7 @@ const [formData, setFormData] = useState<PatientData>(initialFormData);
 					<div>
 						<Label>HPI</Label>
 						<TextArea
-							value={formData.hpi}
+							value={formData.hpi ?? ""}
 							onChange={handleTextAreaChange("hpi")}
 							rows={2}
 						/>
@@ -202,7 +232,7 @@ const [formData, setFormData] = useState<PatientData>(initialFormData);
 					<div>
 						<Label>NOS</Label>
 						<TextArea
-							value={formData.nos}
+							value={formData.nos ?? ""}
 							onChange={handleTextAreaChange("nos")}
 							rows={2}
 						/>
@@ -210,7 +240,7 @@ const [formData, setFormData] = useState<PatientData>(initialFormData);
 					<div>
 						<Label>PMHx</Label>
 						<TextArea
-							value={formData.pmhx}
+							value={formData.pmhx ?? ""}
 							onChange={handleTextAreaChange("pmhx")}
 							rows={2}
 						/>
@@ -218,7 +248,7 @@ const [formData, setFormData] = useState<PatientData>(initialFormData);
 					<div>
 						<Label>PE</Label>
 						<TextArea
-							value={formData.pe}
+							value={formData.pe ?? ""}
 							onChange={handleTextAreaChange("pe")}
 							rows={2}
 						/>
@@ -226,7 +256,7 @@ const [formData, setFormData] = useState<PatientData>(initialFormData);
 					<div>
 						<Label>Laboratories/Diagnostics</Label>
 						<TextArea
-							value={formData.lab_diagnostic}
+							value={formData.lab_diagnostic ?? ""}
 							onChange={handleTextAreaChange("lab_diagnostic")}
 							rows={2}
 						/>
@@ -234,7 +264,7 @@ const [formData, setFormData] = useState<PatientData>(initialFormData);
 					<div>
 						<Label>Impression</Label>
 						<TextArea
-							value={formData.impression}
+							value={formData.impression ?? ""}
 							onChange={handleTextAreaChange("impression")}
 							rows={2}
 						/>
@@ -242,7 +272,7 @@ const [formData, setFormData] = useState<PatientData>(initialFormData);
 					<div>
 						<Label>Treatment Plan</Label>
 						<TextArea
-							value={formData.treatment_plan}
+							value={formData.treatment_plan ?? ""}
 							onChange={handleTextAreaChange("treatment_plan")}
 							rows={3}
 						/>
@@ -250,7 +280,7 @@ const [formData, setFormData] = useState<PatientData>(initialFormData);
 					<div>
 						<Label>Surgical Procedure</Label>
 						<TextArea
-							value={formData.surgical_procedure}
+							value={formData.surgical_procedure ?? ""}
 							onChange={handleTextAreaChange("surgical_procedure")}
 							rows={3}
 						/>
@@ -268,12 +298,12 @@ const [formData, setFormData] = useState<PatientData>(initialFormData);
 						</div>
 					<div> 
 						<Label>Place of Surgery</Label>
-						<Input type="text" value={formData.surgery_place} name="surgery_place" onChange={handleChange}/>
+						<Input type="text" value={formData.surgery_place ?? ""} name="surgery_place" onChange={handleChange}/>
 					</div>
 					<div>
 						<Label >On Findings</Label>
 						<TextArea
-							value={formData.on_findings}
+							value={formData.on_findings ?? ""}
 							onChange={handleTextAreaChange("on_findings")}
 							rows={3}
 						/>
@@ -281,14 +311,14 @@ const [formData, setFormData] = useState<PatientData>(initialFormData);
 					<div>
 						<Label >HISTOPATH</Label>
 						<TextArea
-							value={formData.histopath}
+							value={formData.histopath ?? ""}
 							onChange={handleTextAreaChange("histopath")}
 							rows={3}
 						/>
 					</div>
 					<div> 
 						<Label>ANESTHESIOLOGIST</Label>
-						<Input type="text" value={formData.anesthesiologist} name="anesthesiologist" onChange={handleChange}/>
+						<Input type="text" value={formData.anesthesiologist ?? ""} name="anesthesiologist" onChange={handleChange}/>
 					</div>
 					<div className="flex items-center justify-end gap-5">
 							<Button size="sm" variant="success" startIcon={<CheckCircleIcon />}>

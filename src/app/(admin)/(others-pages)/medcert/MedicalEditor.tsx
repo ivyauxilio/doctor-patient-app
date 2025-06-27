@@ -1,21 +1,62 @@
 "use client"
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
+import { useAppDispatch } from "@/store/hooks";
+// import { useDispatch, useSelector } from "react-redux";
+import { createMedicalCertificate } from "@/store/slices/medicalCertificateSlice";
 import { useReactToPrint } from "react-to-print";
+import Swal from 'sweetalert2';
 
 const MedicalEditor: React.FC = () => {
 
-const contentRef = useRef<HTMLDivElement>(null);
-const reactToPrintFn = useReactToPrint({ contentRef });
+const [patientName, setPatientName] = useState("");
+const [age, setAge] = useState<number>(0);
+const [issue_date, setIssueDate] = useState( new Date().toISOString().split("T")[0]);
+const [impression, setImpression] = useState("");
+
+const dispatch = useAppDispatch();
+// const { saved, loading } = useSelector(state => state.medical);
+
+  const contentRef = useRef<HTMLDivElement>(null);
+  const reactToPrintFn = useReactToPrint({ contentRef });
+  
+  const handlePrintAndSave = async () => {
+  
+  const result = await dispatch(createMedicalCertificate({
+    patients_name: patientName,
+    age,
+    issue_date,
+    impression,
+  }));
+    // Swal.fire({ icon: 'success', title: 'Medical Certificate', text: 'Created successfully.' });
+   if (createMedicalCertificate.fulfilled.match(result)) { 
+        const resultSuccess = await Swal.fire({
+            title: 'Medical Certificate',
+            text: 'Created successfully.',
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Print',
+          });
+      
+        if (resultSuccess.isConfirmed) {
+            reactToPrintFn?.(); // print after save
+        }
+         } else {
+           // alert("Failed to save prescription.");
+           Swal.fire({ icon: 'error', title: 'Oops...', text: 'Something went wrong!' });
+         }
+};
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
       <div className="flex justify-end items-center mb-4">
         {/* <h1 className="text-2xl font-bold">Prescription Editor</h1> */}
         <button
-          onClick={reactToPrintFn}
+          onClick={handlePrintAndSave}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          Print
+          Save & Print
         </button>
       </div>
 
@@ -41,7 +82,8 @@ const reactToPrintFn = useReactToPrint({ contentRef });
           </label>
           <input
             type="date"
-            id="name"
+              id="issue_date"
+              value={issue_date} onChange={(e) => setIssueDate(e.target.value)}
             className="border-b border-gray-400 focus:outline-none 
             focus:border-blue-600 px-2 py-1 bg-transparent"
             placeholder="Enter your name"
@@ -53,7 +95,8 @@ const reactToPrintFn = useReactToPrint({ contentRef });
         <p>This is to certify that </p>
            <input
           type="text"
-          id="name"
+              id="name"
+              value={patientName} onChange={(e) => setPatientName(e.target.value)}
           className="flex-1 border-b border-gray-400 focus:outline-none 
           focus:border-blue-600 px-2 py-1 bg-transparent"
           placeholder="Enter your name"
@@ -62,7 +105,8 @@ const reactToPrintFn = useReactToPrint({ contentRef });
           <div className="flex items-center space-x-2 min-w-[120px]">
             <input
               type="number"
-              id="age"
+                id="age"
+                value={age} onChange={(e) => setAge(Number(e.target.value))}
               className="w-20 border-b border-gray-400 focus:outline-none focus:border-blue-600 px-2 py-1 bg-transparent"
               placeholder="Age"
               />
@@ -86,7 +130,7 @@ const reactToPrintFn = useReactToPrint({ contentRef });
             className="w-full focus:outline-none border-b border-none
             focus:border-blue-600 px-2 py-1 bg-transparent resize-none h-30"
             placeholder="Enter impression details "
-            
+            value={impression} onChange={(e) => setImpression(e.target.value)}
           />
         </div>
 

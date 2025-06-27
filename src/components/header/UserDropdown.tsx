@@ -1,21 +1,30 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useState,useEffect  } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchUser } from "@/store/slices/userSlice";
+import Swal from "sweetalert2";
 
 export default function UserDropdown() {
+  const router = useRouter();
+  const [loggedOut, setLoggedOut] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   const dispatch = useAppDispatch();
   const { user, roles, permissions, loading } = useAppSelector((state) => state.user);
 
   useEffect(() => {
-    dispatch(fetchUser());
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setLoggedOut(true);
+    } else if(token){
+      dispatch(fetchUser());
+    } 
   }, [dispatch]);
 
   function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
@@ -26,6 +35,36 @@ export default function UserDropdown() {
   function closeDropdown() {
     setIsOpen(false);
   }
+
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You will be logged out.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#27b85f",
+      cancelButtonColor: "#aaa",
+      confirmButtonText: "Yes, logout",
+    });
+
+    if (result.isConfirmed) {
+      // Clear local storage or token
+      localStorage.removeItem("token");
+      localStorage.removeItem("user_id");
+
+      // Optional: Show success message
+      await Swal.fire({
+        icon: "success",
+        title: "Logged out!",
+        showConfirmButton: false,
+        timer: 1200,
+      });
+
+      // Redirect to signin page
+      router.push("/signin");
+    }
+  };
+
   return (
     <div className="relative">
       <button
@@ -156,8 +195,31 @@ export default function UserDropdown() {
             </DropdownItem>
           </li>
         </ul> */}
+       {loggedOut ? (
         <Link
           href="/signin"
+            className="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+          >
+            <svg
+            className="fill-gray-500 group-hover:fill-gray-700 dark:group-hover:fill-gray-300"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M8.899 4.753C9.313 4.753 9.649 5.0888 9.649 5.503V9.755H11.149V5.503C11.149 4.2604 10.142 3.253 8.899 3.253H5.5C4.2573 3.253 3.25 4.2604 3.25 5.503V18.504C3.25 19.7466 4.2573 20.754 5.5 20.754H8.899C10.142 20.754 11.149 19.7466 11.149 18.504V14.255H9.649V18.504C9.649 18.9182 9.313 19.254 8.899 19.254H5.5C5.0858 19.254 4.75 18.9182 4.75 18.504V5.503C4.75 5.0888 5.0858 4.753 5.5 4.753H8.899ZM20.7493 12.0016C20.7493 11.7856 20.658 11.5909 20.5118 11.454L15.9052 6.8444C15.6124 6.5515 15.1375 6.5513 14.8445 6.8441C14.5515 7.1369 14.5514 7.6118 14.8442 7.9048L18.1888 11.2516H7.99932C7.5851 11.2516 7.24932 11.5873 7.24932 12.0016C7.24932 12.4158 7.5851 12.7516 7.99932 12.7516H18.1847L14.8441 16.0945C14.5514 16.3874 14.5515 16.8623 14.8445 17.1551C15.1375 17.4479 15.6124 17.4477 15.9052 17.1548L20.477 12.5798C20.6433 12.4423 20.7493 12.2343 20.7493 12.0016Z"
+              fill="currentColor"
+            />
+          </svg>
+          Sign in
+        </Link>
+        ) : (
+        <button
+          onClick={handleLogout}
           className="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
         >
           <svg
@@ -176,7 +238,9 @@ export default function UserDropdown() {
             />
           </svg>
           Sign out
-        </Link>
+        </button>
+      )}
+
       </Dropdown>
     </div>
   );

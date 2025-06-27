@@ -166,13 +166,13 @@ export default function BasicTableOne() {
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     dispatch(fetchPatients({ page:0, search }));
-    console.log("se",search)
+    // console.log("se",search)
   };
 
     const handleEdit = (patient: PatientData) => {
       // You can use router.push to navigate to edit page
       // if (!id) return;
-      console.log("click handle Edit", patient)
+      // console.log("click handle Edit", patient)
       setSelectedPatient(patient);
       setEditModalOpen(true);
       // router.push(`/patients/edit/${id}`);
@@ -571,15 +571,17 @@ export default function BasicTableOne() {
           </div>
         </div>
       </div>
-      <Pagination
-        page={page}
-        total={total || 0}
-        perPage={10}
-        onPageChange={(newPage:number) => {
-          setPage(newPage);
-          dispatch(fetchPatients({ page: newPage, search }));
-        }}
-      />
+      {data && data.length > 0 && (
+        <Pagination
+          page={page}
+          total={total || 0}
+          perPage={10}
+          onPageChange={(newPage: number) => {
+            setPage(newPage);
+            dispatch(fetchPatients({ page: newPage, search }));
+          }}
+        />
+      )}
 
         {/* {!loading && total && (
             <div className="flex justify-center items-center mt-4 space-x-2">

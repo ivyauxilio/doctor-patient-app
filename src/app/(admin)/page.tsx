@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import { EcommerceMetrics } from "@/components/ecommerce/EcommerceMetrics";
 import React from "react";
+import { useRouter } from 'next/navigation';
 import MonthlyTarget from "@/components/ecommerce/MonthlyTarget";
 // import MonthlySalesChart from "@/components/ecommerce/MonthlySalesChart";
 import Registration from '@/components/ecommerce/RegistrationForm';
@@ -12,6 +13,7 @@ import { useEffect,useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchPatients } from '@/store/slices/patientSlice';
 import { RootState, AppDispatch } from '@/store/store';
+import useRequireAuth from '@/hooks/useRequireAuth';
 
 const metadata: Metadata = {
   title:
@@ -21,13 +23,21 @@ const metadata: Metadata = {
 
 export default function Ecommerce() {
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
   const [search, setSearch] = useState('');
+  // const { isAuthenticated } = useRequireAuth();
   const { data, total,today_total, current_page, loading, error } = useSelector((state: RootState) => state.patients);
   
   useEffect(() => {
+    // if (isAuthenticated) {
     dispatch(fetchPatients({ page: 1, search }));
+    // }
+    // }, [dispatch, isAuthenticated, search]);
   }, [dispatch]);
 
+  // if (!isAuthenticated) {
+  //   return null; // 🔒 Don't render component if not logged in
+  // }
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-6">
       <div className="col-span-12 space-y-6 xl:col-span-7">

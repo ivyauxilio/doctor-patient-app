@@ -73,7 +73,7 @@ const userSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // Authenticated user
+      // Current user
       .addCase(fetchUser.pending, (state) => {
         state.loading = true;
       })
@@ -85,9 +85,9 @@ const userSlice = createSlice({
       })
       .addCase(fetchUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = (action.payload as any)?.message || 'An error occurred';
+        state.error = (action.payload as any)?.message || "An error occurred";
       })
-    
+
       // All users
       .addCase(fetchAllUsers.pending, (state) => {
         state.usersLoading = true;
@@ -101,14 +101,36 @@ const userSlice = createSlice({
         state.usersLoading = false;
         state.usersError = action.payload;
       })
+
+      // Delete user
+      .addCase(deleteUser.pending, (state) => {
+        state.usersLoading = true;
+        state.usersError = null;
+      })
       .addCase(deleteUser.fulfilled, (state, action) => {
-        state.users = state.users.filter(u => u.id !== action.payload);
+        state.usersLoading = false;
+        state.users = state.users.filter((u) => u.id !== action.payload);
+      })
+      .addCase(deleteUser.rejected, (state, action: any) => {
+        state.usersLoading = false;
+        state.usersError = action.payload;
+      })
+
+      // Update user
+      .addCase(updateUser.pending, (state) => {
+        state.usersLoading = true;
+        state.usersError = null;
       })
       .addCase(updateUser.fulfilled, (state, action) => {
-        const index = state.users.findIndex(u => u.id === action.payload.id);
+        state.usersLoading = false;
+        const index = state.users.findIndex((u) => u.id === action.payload.id);
         if (index !== -1) {
           state.users[index] = action.payload;
         }
+      })
+      .addCase(updateUser.rejected, (state, action: any) => {
+        state.usersLoading = false;
+        state.usersError = action.payload;
       });
   },
 });
