@@ -7,7 +7,8 @@ import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchUser } from "@/store/slices/userSlice";
+import { fetchUser,resetUserState  } from "@/store/slices/userSlice";
+import { persistor } from '@/store/store';
 import Swal from "sweetalert2";
 
 export default function UserDropdown() {
@@ -49,6 +50,8 @@ export default function UserDropdown() {
 
     if (result.isConfirmed) {
       // Clear local storage or token
+      dispatch(resetUserState());
+      await persistor.purge();
       localStorage.removeItem("token");
       localStorage.removeItem("user_id");
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
+import { useAppSelector } from "@/store/hooks";
 import {
   BoxCubeIcon,
   CalenderIcon,
@@ -26,64 +27,7 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-const navItems: NavItem[] = [
-  {
-    icon: <GridIcon />,
-    name: "Dashboard",
-    path: "/",
-    // subItems: [{ name: "Ecommerce", path: "/", pro: false }],
-  },
-  // {
-  //   icon: <CalenderIcon />,
-  //   name: "Calendar",
-  //   path: "cc",
-  // },
-  {
-    name: "Patients",
-    icon: <TableIcon />,
-    path: "/patients"
-    // subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-  },
-  // {
-  //   icon: <UserCircleIcon />,
-  //   name: "User Profile",
-  //   path: "/profile",
-  // },
-  {
-    icon: <PageIcon />,
-    name: "Medical Certificate",
-    path: "/medcert",
-  },
-  {
-    icon: <PageIcon />,
-    name: "Rx",
-    path: "/prescription",
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "User List",
-    path: "/userlist",
-  },
-  {
-    icon: <PageIcon />,
-    name: "Logs",
-    path: "/logs",
-  },
 
-  // {
-  //   name: "Forms",
-  //   icon: <ListIcon />,
-  //   subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  // },
-  // {
-  //   name: "Certificates",
-  //   icon: <PageIcon />,
-  //   subItems: [
-  //     { name: "Medical Certificate", path: "/blank", pro: false },
-  //     { name: "Rx", path: "/error-404", pro: false },
-  //   ],
-  // },
-];
 
 const othersItems: NavItem[] = [
   {
@@ -119,7 +63,68 @@ const othersItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
-
+    const roles = useAppSelector((state) => state.user.roles);
+     const isDoctorOrAdmin = roles.includes("doctor") || roles.includes("admin");
+const navItems: NavItem[] = [
+  {
+    icon: <GridIcon />,
+    name: "Dashboard",
+    path: "/",
+    // subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+  },
+  // {
+  //   icon: <CalenderIcon />,
+  //   name: "Calendar",
+  //   path: "cc",
+  // },
+  {
+    name: "Patients",
+    icon: <TableIcon />,
+    path: "/patients"
+    // subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
+  },
+  // {
+  //   icon: <UserCircleIcon />,
+  //   name: "User Profile",
+  //   path: "/profile",
+  // },
+  {
+    icon: <PageIcon />,
+    name: "Medical Certificate",
+    path: "/medcert",
+  },
+  {
+    icon: <PageIcon />,
+    name: "Rx",
+    path: "/prescription",
+  },
+  
+  ...(isDoctorOrAdmin
+      ? [
+          {
+            icon: <UserCircleIcon />,
+            name: "Create account",
+            path: "/createuser",
+          },
+          { icon: <PageIcon />, name: "Logs", path: "/logs" },
+        ]
+      : []),
+  
+        // {
+        //   name: "Forms",
+        //   icon: <ListIcon />,
+        //   subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+        // },
+        // {
+        //   name: "Certificates",
+        //   icon: <PageIcon />,
+        //   subItems: [
+        //     { name: "Medical Certificate", path: "/blank", pro: false },
+        //     { name: "Rx", path: "/error-404", pro: false },
+        //   ],
+        // },
+      ];
+  
   const renderMenuItems = (
     navItems: NavItem[],
     menuType: "main" | "others"

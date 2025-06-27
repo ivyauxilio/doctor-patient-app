@@ -1,5 +1,5 @@
 // store/userSlice.ts
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { User } from "@/types/User";
 import api from '@/lib/api';
 
@@ -7,6 +7,20 @@ export const fetchUser = createAsyncThunk("user/fetchUser", async () => {
   const response = await api.get("/me", { withCredentials: true });
   return response.data;
 });
+
+export const registerFrontDesk = createAsyncThunk(
+  'user/register',
+  async (userData: { name: string; email: string; password: string }, thunkAPI) => {
+    try {
+      const res = await api.post('register/frontdesk', userData, {
+        withCredentials: true,
+      });
+      return res.data.user;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response.data.message || 'Registration failed');
+    }
+  }
+);
 
 // Fetch all users (admin/doctor only)
 export const fetchAllUsers = createAsyncThunk(
@@ -70,7 +84,9 @@ const initialState: UserState = {
 const userSlice = createSlice({
   name: "user",
   initialState,
-  reducers: {},
+  reducers: {
+    resetUserState: () => initialState, 
+  },
   extraReducers: (builder) => {
     builder
       // Current user
@@ -87,7 +103,20 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = (action.payload as any)?.message || "An error occurred";
       })
-
+      .addCase(registerFrontDesk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(registerFrontDesk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        state.roles = action.payload.roles || [];
+        state.permissions = action.payload.permissions || [];
+      })
+      .addCase(registerFrontDesk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
       // All users
       .addCase(fetchAllUsers.pending, (state) => {
         state.usersLoading = true;
@@ -134,5 +163,5 @@ const userSlice = createSlice({
       });
   },
 });
-
+export const { resetUserState } = userSlice.actions;
 export default userSlice.reducer;

@@ -24,7 +24,7 @@ export default function useAuth() {
   return { isAuthenticated: !!user, user };
 }
 
-export const login = async (email: string, password: string) => {
+export const login = async (email: string, password: string, dispatch: any) => {
   try {
     const data = await apiLogin(email, password);
     return { success: true, data };

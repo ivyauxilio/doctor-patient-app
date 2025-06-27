@@ -24,20 +24,38 @@ const metadata: Metadata = {
 export default function Ecommerce() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const [authChecked, setAuthChecked] = useState(false);
   const [search, setSearch] = useState('');
-  // const { isAuthenticated } = useRequireAuth();
+  const { isAuthenticated } = useRequireAuth();
   const { data, total,today_total, current_page, loading, error } = useSelector((state: RootState) => state.patients);
-  
-  useEffect(() => {
-    // if (isAuthenticated) {
-    dispatch(fetchPatients({ page: 1, search }));
-    // }
-    // }, [dispatch, isAuthenticated, search]);
-  }, [dispatch]);
 
-  // if (!isAuthenticated) {
-  //   return null; // 🔒 Don't render component if not logged in
+
+  // if (isAuthenticated === undefined) {
+  //   return <div>Loading...</div>;
   // }
+  // if (!isAuthenticated) {
+  //   router.push('/signin');
+  //   return null;
+  // }
+
+  //   useEffect(() => {
+  //   // if (isAuthenticated) {
+  //   dispatch(fetchPatients({ page: 1, search }));
+  //   // }
+  //   }, [dispatch, isAuthenticated, search]);
+  // // }, [dispatch]);
+  //   useEffect(() => {
+  //   if (isAuthenticated === false) {
+  //     router.push('/signin');
+  //   } else if (isAuthenticated === true) {
+  //     setAuthChecked(true);
+  //   }
+  // }, [isAuthenticated, router]);
+
+    // if (!authChecked) {
+    // return <div>Loading...</div>; // or a spinner
+    // }
+  
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-6">
       <div className="col-span-12 space-y-6 xl:col-span-7">
@@ -50,18 +68,6 @@ export default function Ecommerce() {
       <div className="col-span-12 xl:col-span-5">
         <MonthlyTarget data={data} />
       </div>
-
-      {/* <div className="col-span-12">
-        <StatisticsChart />
-      </div> */}
-
-      {/* <div className="col-span-12 xl:col-span-5">
-        <DemographicCard />
-      </div>
-
-      <div className="col-span-12 xl:col-span-7">
-        <RecentOrders />
-      </div> */}
     </div>
   );
 }
