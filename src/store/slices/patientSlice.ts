@@ -46,7 +46,7 @@ export const fetchPatients = createAsyncThunk(
   'patients/fetchAll',
   async ({ page = 1, search = '' }: { page?: number; search?: string }) => {
     const response = await api.get(`/patients?page=${page}&search=${search}`);
-    console.log("res",search, response.data)
+    // console.log("res",search, response.data)
     return response.data; // returns { data, current_page, last_page, per_page, total, ... }
   } 
   // async ({ page, search }: { page: number; search?: string }) => {
@@ -71,7 +71,7 @@ export const updatePatient = createAsyncThunk(
   async ({ updatedData, id }: { updatedData: PatientData;id: number; }, thunkAPI) => {
     try {
       const response = await api.put(`/patients/${id}`, updatedData);
-      console.log("update", response)
+      // console.log("update", response)
       return response.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error.response?.data || 'Error updating patient');

@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { createPrescription } from "@/store/slices/prescriptionSlice";
 import { useReactToPrint } from "react-to-print";
 import Swal from 'sweetalert2';
+import Image from "next/image";
 
 const PrescriptionEditor: React.FC = () => {
 
@@ -189,18 +190,25 @@ const reactToPrintFn = useReactToPrint({ contentRef });
           />
         </div>
 
-        <div className="mb-4">
-          {/* <label className="block text-sm font-medium">Medications</label> */}
+        {/* <div className="mb-4">
+         <label className="block text-sm font-medium">Medications</label> 
           <textarea
               id="medication" value={form.medication} onChange={handleChange}
             className="w-full focus:outline-none  resize-none
             focus:border-blue-600 px-2 py-1 bg-transparent h-80"
             placeholder="Ex. 1. Paracetamol 500mg - Twice a day after meals..."
           />
-        </div>
+        </div> */}
 
-        <div className="flex justify-end mt-6">
-          <div className="flex flex-col text-justify text-sm max-w-xs">
+        <div className="flex justify-end mt-10">
+            <div className="flex flex-col text-justify text-sm max-w-xs relative mt-6">
+              <Image
+                className="w-40 h-auto absolute -top-13 left-0 opacity-80 pointer-events-none "
+                src="/images/signature/drenesionsignature-2.png"
+                alt="Logo"
+                width={140}
+                height={132}
+              />
             <h4 className="text-based font-bold">Emmanuel D. Enesio, M.D.</h4>
             <p>Lic. No. <span className="underline font-bold">____88510_____</span></p>
             <p>S2  <strong>___________________</strong></p>

@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8000/api'; // Adjust as needed
+// const API_BASE_URL = 'https://staging.agilebeyond.net/api';
 
 // Create Axios instance
 const api = axios.create({
@@ -52,6 +53,7 @@ export interface PatientData {
 
 export const getCSRFToken = async () => {
   await axios.get(`http://localhost:8000/sanctum/csrf-cookie`, {
+  // await axios.get(`https://staging.agilebeyond.net/sanctum/csrf-cookie`, {
     withCredentials: true,
   });
 };

@@ -8,6 +8,7 @@ export const createMedicalCertificate = createAsyncThunk(
     age: number;
     issue_date: string;
     impression?: string;
+    reason?: string;
   }, { rejectWithValue }) => {
     try {
       const response = await api.post("/certifications", data, { withCredentials: true });

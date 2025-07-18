@@ -6,6 +6,7 @@ import { persistStore, persistReducer } from 'redux-persist';
 import patientReducer from './slices/patientSlice';
 import userReducer from './slices/userSlice';
 import logReducer from './slices/logSlice';
+import progressNoteReducer from './slices/progressNoteSlice';
 
 // export const store = configureStore({
 //   reducer: {
@@ -20,6 +21,7 @@ const rootReducer = combineReducers({
   user: userReducer,
   patients: patientReducer,
   logs: logReducer,
+  progressNotes: progressNoteReducer,
 });
 
 // 2. Configure redux-persist

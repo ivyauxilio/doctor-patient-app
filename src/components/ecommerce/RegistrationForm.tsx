@@ -230,7 +230,7 @@ export default function Registration({ patient }: Props) {
 						/>
 					</div>
 					<div>
-						<Label>NOS</Label>
+						<Label>ROS</Label>
 						<TextArea
 							value={formData.nos ?? ""}
 							onChange={handleTextAreaChange("nos")}
@@ -321,7 +321,7 @@ export default function Registration({ patient }: Props) {
 						<Input type="text" value={formData.anesthesiologist ?? ""} name="anesthesiologist" onChange={handleChange}/>
 					</div>
 					<div className="flex items-center justify-end gap-5">
-							<Button size="sm" variant="success" startIcon={<CheckCircleIcon />}>
+							<Button size="sm" type="submit" variant="success" startIcon={<CheckCircleIcon />}>
 								Save Details
 							</Button>
 					</div>

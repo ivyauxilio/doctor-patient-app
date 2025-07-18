@@ -106,7 +106,7 @@ const navItems: NavItem[] = [
             name: "Create account",
             path: "/createuser",
           },
-          { icon: <PageIcon />, name: "Logs", path: "/logs" },
+          // { icon: <PageIcon />, name: "Logs", path: "/logs" },
         ]
       : []),
   

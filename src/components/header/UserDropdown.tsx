@@ -18,6 +18,7 @@ export default function UserDropdown() {
 
   const dispatch = useAppDispatch();
   const { user, roles, permissions, loading } = useAppSelector((state) => state.user);
+  const isfrontDesk = roles.includes("frontDesk");
 
   useEffect(() => {
     const token = localStorage.getItem("token");

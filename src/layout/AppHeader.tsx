@@ -83,21 +83,31 @@ const AppHeader: React.FC = () => {
             {/* Cross Icon */}
           </button>
 
-          <Link href="/" className="lg:hidden">
-            <Image
+          <Link href="/" className="lg:hidden flex block mb-4">
+            {/* <Image
               width={154}
               height={32}
               className="dark:hidden"
               src="./images/logo/logo.svg"
               alt="Logo"
-            />
-            <Image
+            /> */}
+                <Image
+                                  className="dark:hidden flex-shrink-0"
+                                  src="/images/logo/logo-icon.svg"
+                                  alt="Logo"
+                                  width={32}
+                                  height={32}
+                                />
+                                  <h1 className=" dark:text-white/90 text-2xl ml-3 text-black whitespace-nowrap overflow-hidden text-ellipsis">
+                                    Doctor's App
+                                  </h1>
+            {/* <Image
               width={154}
               height={32}
               className="hidden dark:block"
               src="./images/logo/logo-dark.svg"
               alt="Logo"
-            />
+            /> */}
           </Link>
 
           <button

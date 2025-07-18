@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from 'react';
+import { useEffect, useState,useRef } from 'react';
 // import { useSelector, useDispatch } from 'react-redux';
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchPatients,deletePatient  } from '@/store/slices/patientSlice';
@@ -7,8 +7,9 @@ import { RootState, AppDispatch } from '@/store/store';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import Pagination from "@/components/pagination/Pagination";
 import EditPatientModal from "@/components/modal/EditPatientModal";
+import DisplayPatientModal from "@/components/modal/displayDetails";
 import Swal from 'sweetalert2';
-
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -17,14 +18,11 @@ import {
   TableRow,
 } from "../ui/table";
 
-// import Badge from "../ui/badge/Badge";
-// import Image from "next/image";
 import { PatientData } from '@/lib/api'; // or wherever you define it
 import { format } from "date-fns";
 
 interface BasicTableOneProps {
   data: PatientData[];
-  // total: number | null;
 }
 
 interface Order {
@@ -130,8 +128,9 @@ const tableData: Order[] = [
 
 // const BasicTableOne: React.FC<BasicTableOneProps> = () => {
 export default function BasicTableOne() {
-  const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<PatientData | null>(null);  
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [displayModalOpen, setDisplayModalOpen] = useState(false);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -144,10 +143,29 @@ export default function BasicTableOne() {
   // const dispatch = useDispatch<AppDispatch>();
   const dispatch = useAppDispatch();
   const [search, setSearch] = useState('');
+  const {user} = useAppSelector((state) => state.user);
   const roles = useAppSelector((state) => state.user.roles);
   const { data, total, current_page, loading, error } = useAppSelector((state) => state.patients);
   const isDoctorOrAdmin = roles.includes("doctor") || roles.includes("admin");
   const isDashboard = pathname === "/";
+  
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const tabs = [
+    {
+      id: "patient-tab",
+      title: "Patient Info",
+      content: "Patient",
+    },
+    {
+      id: "progress-tab",
+      title: "Progress Note",
+      content: "Progress Note",
+    },
+  ];
   
   useEffect(() => {
       // if (current_page && current_page !== page) {
@@ -170,9 +188,7 @@ export default function BasicTableOne() {
   };
 
     const handleEdit = (patient: PatientData) => {
-      // You can use router.push to navigate to edit page
-      // if (!id) return;
-      // console.log("click handle Edit", patient)
+      document.getElementById("editPatient")?.style.setProperty("display", "block");
       setSelectedPatient(patient);
       setEditModalOpen(true);
       // router.push(`/patients/edit/${id}`);
@@ -180,14 +196,12 @@ export default function BasicTableOne() {
   
   const handleUpdateSave = async (updated: PatientData) => {
       console.log("handleUpdateSave",updated)
-      // try {
-      //   await axios.put(`/api/patients/${updated.id}`, updated);
-      //   dispatch(fetchPatients({ page, search }));
-      // } catch (error) {
-      //   console.error("Failed to update patient", error);
-      //   alert("Failed to update patient.");
-      // }
-    };
+  };
+  
+  const displayPatient = (patient: PatientData) => {
+    setSelectedPatient(patient);
+    setDisplayModalOpen(true);
+  }
 
   const handleDelete = async (id?: number) => {
         if (id === undefined) return;
@@ -202,7 +216,29 @@ export default function BasicTableOne() {
             dispatch(deletePatient(id));
           }
         });
-    };
+  };
+  
+  const onMouseDown = (e: React.MouseEvent) => {
+    const slider = scrollRef.current;
+    if (!slider) return;
+    setIsDragging(true);
+    setStartX(e.pageX - slider.offsetLeft);
+    setScrollLeft(slider.scrollLeft);
+  };
+
+  const onMouseLeaveOrUp = () => {
+    setIsDragging(false);
+  };
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const slider = scrollRef.current;
+    if (!slider) return;
+    const x = e.pageX - slider.offsetLeft;
+    const walk = (x - startX) * 1.5; // Adjust scroll speed
+    slider.scrollLeft = scrollLeft - walk;
+  };
   
   return (
     <div className='relative'>
@@ -263,9 +299,17 @@ export default function BasicTableOne() {
             </form>  
         </div>
       )}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
         <div className="max-w-full overflow-y-auto overflow-x-auto">
-          <div className="w-full overflow-x-auto">
+          <div 
+               ref={scrollRef}
+              onMouseDown={onMouseDown}
+              onMouseUp={onMouseLeaveOrUp}
+              onMouseLeave={onMouseLeaveOrUp}
+              onMouseMove={onMouseMove}
+              className="cursor-grab overflow-hidden w-full border rounded-lg"
+              style={{ overflowX: "auto", whiteSpace: "nowrap" }}
+          >
              {/* {loading && (
                   <div className="flex justify-center py-4">
                     <Spinner />
@@ -336,7 +380,7 @@ export default function BasicTableOne() {
                     isHeader
                     className="px-5 py-3 font-bold text-gray-800 text-start text-theme-xs dark:text-gray-400"
                   >
-                    NOS
+                    ROS
                   </TableCell>
                   <TableCell
                     isHeader
@@ -427,21 +471,21 @@ export default function BasicTableOne() {
                           onClick={() => handleEdit(i)}
                           className="px-2 py-1 text-xs text-white bg-green-600 rounded hover:bg-green-700"
                         >
-                          Edit
+                              Edit {i.id}
                         </button>
                         <button
                           onClick={() => handleDelete(i.id)}
                           className="px-2 py-1 text-xs text-white bg-red-600 rounded hover:bg-red-700"
                         >
-                          Delete
+                          X
                         </button>
                       </div>
                     </TableCell>  )}
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                       {i.id}
                     </TableCell>
-                    <TableCell className="px-5 py-4 sm:px-6 text-start">
-                      <div className="flex items-center gap-3">
+                    <TableCell className="px-5 py-4 sm:px-6 text-start cursor-pointer"  onClick={() => displayPatient(i)}>
+                      <div className="flex items-center gap-3 ">
                         {/* <div className="w-10 h-10 overflow-hidden rounded-full">
                           <Image
                             src={i.sex?.toLowerCase().trim() === "male" ? "/images/icons/man.png" : "/images/icons/female.png"}
@@ -452,9 +496,9 @@ export default function BasicTableOne() {
                           />
                         </div> */}
                         <div>
-                          <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                          <Link href="#" className="block underline font-medium text-gray-800 text-theme-sm dark:text-white/90">
                             {i.first_name} {i.last_name} 
-                          </span>
+                          </Link>
                           {/* <span className="block text-gray-500 text-theme-xs dark:text-gray-400">
                             {order.user.role}
                           </span> */}
@@ -615,6 +659,13 @@ export default function BasicTableOne() {
         onClose={() => setEditModalOpen(false)}
         patient={selectedPatient}
         onSave={handleUpdateSave}
+      />
+      <DisplayPatientModal
+        isOpen={displayModalOpen}
+        onClose={() => setDisplayModalOpen(false)}
+        patient={selectedPatient}
+        tabs={tabs}
+        userId={user?.id as number}
       />
   
     </div>

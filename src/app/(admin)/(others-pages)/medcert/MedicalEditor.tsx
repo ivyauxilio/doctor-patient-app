@@ -5,13 +5,14 @@ import { useAppDispatch } from "@/store/hooks";
 import { createMedicalCertificate } from "@/store/slices/medicalCertificateSlice";
 import { useReactToPrint } from "react-to-print";
 import Swal from 'sweetalert2';
-
+import Image from "next/image";
 const MedicalEditor: React.FC = () => {
 
 const [patientName, setPatientName] = useState("");
 const [age, setAge] = useState<number>(0);
 const [issue_date, setIssueDate] = useState( new Date().toISOString().split("T")[0]);
-const [impression, setImpression] = useState("");
+  const [impression, setImpression] = useState("");
+  const [reason, setReason] = useState("");
 
 const dispatch = useAppDispatch();
 // const { saved, loading } = useSelector(state => state.medical);
@@ -26,6 +27,7 @@ const dispatch = useAppDispatch();
     age,
     issue_date,
     impression,
+    reason
   }));
     // Swal.fire({ icon: 'success', title: 'Medical Certificate', text: 'Created successfully.' });
    if (createMedicalCertificate.fulfilled.match(result)) { 
@@ -116,7 +118,15 @@ const dispatch = useAppDispatch();
               <br />
              
             </div>
-             <p>been seen and examined in my clinic for Medical Check-up.</p>
+            <p>been seen and examined in my clinic for</p>
+           <input
+          type="text"
+              id="reason"
+              value={reason} onChange={(e) => setReason(e.target.value)}
+          className="flex-1 border-b border-gray-400 focus:outline-none 
+          focus:border-blue-600 px-2 py-1 bg-transparent"
+          placeholder="ex. Medical Check-up"
+            /> 
       </div>
 
         <div className="flex flex-wrap gap-6 mb-1">
@@ -138,9 +148,18 @@ const dispatch = useAppDispatch();
           <p className="mt-10">Thank you very much.</p>
 
         <div className="flex justify-start mt-20">
-          <div className="flex flex-col text-justify text-sm max-w-xs">
+            <div className="flex flex-col text-justify text-sm max-w-xs">
+               <Image
+                                    className="w-45 h-auto "
+                                    src="/images/signature/drenesionsignature-1.png"
+                alt="Logo"
+                                      width={160}
+                      height={132}
+                                  />
             <h4 className="text-based font-bold">Emmanuel D. Enesio, M.D.</h4>
-            <p>Lic. No. <span className="underline font-bold">____88510_____</span></p>
+              <p>Lic. No. <span className="underline font-bold">____88510_____</span></p>
+              <p>S2  <strong>___________________</strong></p>
+            <p>PTR<strong>__________________</strong></p>
           </div>
         </div>
       </div>
