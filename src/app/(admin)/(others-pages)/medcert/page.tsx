@@ -1,6 +1,6 @@
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import Medical from "./medical";
+import Medical from "./MedicalEditor";
 import { Metadata } from "next";
 import React from "react";
 

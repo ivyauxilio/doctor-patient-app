@@ -1,7 +1,8 @@
 'use client';
 import { Outfit } from 'next/font/google';
+import { PersistGate } from 'redux-persist/integration/react';
 import { Provider } from 'react-redux'
-import { store } from '@/store/store'
+import { store, persistor  } from '@/store/store'
 import './globals.css';
 
 import { SidebarProvider } from '@/context/SidebarContext';
@@ -20,10 +21,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={outfit.variable}>
       <body className="dark:bg-gray-900">
-        <Provider store={store}>
-          <ThemeProvider>
+        <Provider store={store}>          
+          <PersistGate loading={null} persistor={persistor}>
+            <ThemeProvider>
             <SidebarProvider>{children}</SidebarProvider>
           </ThemeProvider>
+          </PersistGate>
         </Provider>
       </body>
     </html>

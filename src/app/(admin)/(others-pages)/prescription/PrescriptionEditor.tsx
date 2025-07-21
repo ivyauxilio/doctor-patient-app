@@ -1,21 +1,67 @@
 "use client"
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { createPrescription } from "@/store/slices/prescriptionSlice";
 import { useReactToPrint } from "react-to-print";
+import Swal from 'sweetalert2';
+import Image from "next/image";
 
 const PrescriptionEditor: React.FC = () => {
 
+const dispatch = useDispatch();
 const contentRef = useRef<HTMLDivElement>(null);
 const reactToPrintFn = useReactToPrint({ contentRef });
 
+  const [form, setForm] = useState({
+    name: "",
+    age: "",
+    address: "",
+    sex: "",
+    patient_id: "", // optional if you're referencing a user
+    medication: "",
+    dosage: "",
+    instructions: "",
+    date_prescribed: new Date().toISOString().split("T")[0],
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { id, value } = e.target;
+    setForm((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handlePrintAndSave = async () => {
+    const result = await dispatch(createPrescription(form) as any);
+
+    if (createPrescription.fulfilled.match(result)) {
+      // reactToPrintFn(); // only print if save was successful
+          const resultSuccess = await Swal.fire({
+              title: 'Prescription',
+              text: 'Created successfully.',
+              icon: 'success',
+              showCancelButton: true,
+              confirmButtonColor: '#d33',
+              cancelButtonColor: '#3085d6',
+              confirmButtonText: 'Print',
+            });
+        
+          if (resultSuccess.isConfirmed) {
+              reactToPrintFn?.(); // print after save
+          }
+    } else {
+      // alert("Failed to save prescription.");
+      Swal.fire({ icon: 'error', title: 'Oops...', text: 'Something went wrong!' });
+    }
+  };
+  
   return (
     <div className="p-4 max-w-4xl mx-auto">
       <div className="flex justify-end items-center mb-4">
         {/* <h1 className="text-2xl font-bold">Prescription Editor</h1> */}
         <button
-          onClick={reactToPrintFn}
+           onClick={handlePrintAndSave}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          Print
+          Save & Print
         </button>
       </div>
 
@@ -39,6 +85,7 @@ const reactToPrintFn = useReactToPrint({ contentRef });
         <input
           type="text"
           id="name"
+          value={form.name} onChange={handleChange}
           className="flex-1 border-b border-gray-400 focus:outline-none 
           focus:border-blue-600 px-2 py-1 bg-transparent"
           placeholder="Enter your name"
@@ -52,8 +99,9 @@ const reactToPrintFn = useReactToPrint({ contentRef });
               Address:
             </label>
             <input
-              type="text"
-              id="address"
+                type="text"
+                id="address"
+              value={form.address} onChange={handleChange}
               className="flex-1 border-b border-gray-400 focus:outline-none focus:border-blue-600 px-2 py-1 bg-transparent"
               placeholder="Enter address"
             />
@@ -66,6 +114,7 @@ const reactToPrintFn = useReactToPrint({ contentRef });
             </label>
             <input
               type="number"
+              value={form.age} onChange={handleChange}
               id="age"
               className="w-20 border-b border-gray-400 focus:outline-none focus:border-blue-600 px-2 py-1 bg-transparent"
               placeholder="Age"
@@ -78,25 +127,27 @@ const reactToPrintFn = useReactToPrint({ contentRef });
               Sex:
             </label>
             <select
-              id="sex"
+                id="sex"
+                value={form.sex} onChange={handleChange}
               className="border-b border-gray-400 focus:outline-none focus:border-blue-600 px-2 py-1 bg-transparent"
             >
               <option value="">Select</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
             </select>
           </div>
         </div>
         <div className="flex justify-end text-right items-center mb-4 space-x-4">
           <label
-            htmlFor="name"
+            htmlFor="date_prescribed"
             className="text-sm font-medium whitespace-nowrap"
           >
             Date: 
           </label>
           <input
-            type="date"
-            id="name"
+              id="date_prescribed"
+              value={form.date_prescribed}
+              onChange={handleChange} type="date"
             className="border-b border-gray-400 focus:outline-none 
             focus:border-blue-600 px-2 py-1 bg-transparent"
             placeholder="Enter your name"
@@ -131,26 +182,33 @@ const reactToPrintFn = useReactToPrint({ contentRef });
 
         <div className="my-6">
           {/* <label className="block text-sm font-medium">Diagnosis</label> */}
-          <textarea
+            <textarea
+              id="instructions" value={form.instructions} onChange={handleChange}
             className="w-full focus:outline-none border-b border-gray-100
             focus:border-blue-600 px-2 py-1 bg-transparent resize-none h-60"
             placeholder="Enter diagnosis details "
-            
           />
         </div>
 
-        <div className="mb-4">
-          {/* <label className="block text-sm font-medium">Medications</label> */}
+        {/* <div className="mb-4">
+         <label className="block text-sm font-medium">Medications</label> 
           <textarea
-            
+              id="medication" value={form.medication} onChange={handleChange}
             className="w-full focus:outline-none  resize-none
             focus:border-blue-600 px-2 py-1 bg-transparent h-80"
             placeholder="Ex. 1. Paracetamol 500mg - Twice a day after meals..."
           />
-        </div>
+        </div> */}
 
-        <div className="flex justify-end mt-6">
-          <div className="flex flex-col text-justify text-sm max-w-xs">
+        <div className="flex justify-end mt-10">
+            <div className="flex flex-col text-justify text-sm max-w-xs relative mt-6">
+              <Image
+                className="w-40 h-auto absolute -top-13 left-0 opacity-80 pointer-events-none "
+                src="/images/signature/drenesionsignature-2.png"
+                alt="Logo"
+                width={140}
+                height={132}
+              />
             <h4 className="text-based font-bold">Emmanuel D. Enesio, M.D.</h4>
             <p>Lic. No. <span className="underline font-bold">____88510_____</span></p>
             <p>S2  <strong>___________________</strong></p>

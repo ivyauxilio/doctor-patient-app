@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
+import { useAppSelector } from "@/store/hooks";
 import {
   BoxCubeIcon,
   CalenderIcon,
@@ -26,54 +27,7 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-const navItems: NavItem[] = [
-  {
-    icon: <GridIcon />,
-    name: "Dashboard",
-    path: "/",
-    // subItems: [{ name: "Ecommerce", path: "/", pro: false }],
-  },
-  // {
-  //   icon: <CalenderIcon />,
-  //   name: "Calendar",
-  //   path: "cc",
-  // },
-  {
-    name: "Patients",
-    icon: <TableIcon />,
-    path: "/patients"
-    // subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
-  },
-  {
-    icon: <PageIcon />,
-    name: "Medical Certificate",
-    path: "/medcert",
-  },
-  {
-    icon: <PageIcon />,
-    name: "Rx",
-    path: "/prescription",
-  },
 
-  // {
-  //   name: "Forms",
-  //   icon: <ListIcon />,
-  //   subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  // },
-  // {
-  //   name: "Certificates",
-  //   icon: <PageIcon />,
-  //   subItems: [
-  //     { name: "Medical Certificate", path: "/blank", pro: false },
-  //     { name: "Rx", path: "/error-404", pro: false },
-  //   ],
-  // },
-];
 
 const othersItems: NavItem[] = [
   {
@@ -109,7 +63,68 @@ const othersItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
-
+    const roles = useAppSelector((state) => state.user.roles);
+     const isDoctorOrAdmin = roles.includes("doctor") || roles.includes("admin");
+const navItems: NavItem[] = [
+  {
+    icon: <GridIcon />,
+    name: "Dashboard",
+    path: "/",
+    // subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+  },
+  // {
+  //   icon: <CalenderIcon />,
+  //   name: "Calendar",
+  //   path: "cc",
+  // },
+  {
+    name: "Patients",
+    icon: <TableIcon />,
+    path: "/patients"
+    // subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
+  },
+  // {
+  //   icon: <UserCircleIcon />,
+  //   name: "User Profile",
+  //   path: "/profile",
+  // },
+  {
+    icon: <PageIcon />,
+    name: "Medical Certificate",
+    path: "/medcert",
+  },
+  {
+    icon: <PageIcon />,
+    name: "Rx",
+    path: "/prescription",
+  },
+  
+  ...(isDoctorOrAdmin
+      ? [
+          {
+            icon: <UserCircleIcon />,
+            name: "Create account",
+            path: "/createuser",
+          },
+          // { icon: <PageIcon />, name: "Logs", path: "/logs" },
+        ]
+      : []),
+  
+        // {
+        //   name: "Forms",
+        //   icon: <ListIcon />,
+        //   subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+        // },
+        // {
+        //   name: "Certificates",
+        //   icon: <PageIcon />,
+        //   subItems: [
+        //     { name: "Medical Certificate", path: "/blank", pro: false },
+        //     { name: "Rx", path: "/error-404", pro: false },
+        //   ],
+        // },
+      ];
+  
   const renderMenuItems = (
     navItems: NavItem[],
     menuType: "main" | "others"
@@ -302,7 +317,8 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`lg:block w-64 fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`lg:block w-64 fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 
+        bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
         ${
           isExpanded || isMobileOpen
             ? "w-[290px]"
@@ -315,21 +331,24 @@ const AppSidebar: React.FC = () => {
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div
-        className={`py-8 flex  ${
+      {/* <div
+        className={`py-8 flex 
+          ${
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-        }`}
+        }
+          `}
       >
-        <Link href="/">
+        <Link href="/" className="flex items-center space-x-3 overflow-hidden">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <Image
                 className="dark:hidden"
-                src="/images/logo/logo.svg"
+                src="/images/logo/logo-icon.svg"
                 alt="Logo"
-                width={150}
-                height={40}
+              width={40}
+              height={40}
               />
+              <h1 className="text-2xl ml-3">Doctor's App</h1>
               <Image
                 className="hidden dark:block"
                 src="/images/logo/logo-dark.svg"
@@ -345,6 +364,26 @@ const AppSidebar: React.FC = () => {
               width={32}
               height={32}
             />
+            )}
+        </Link>
+      </div> */}
+      <div
+        className={`py-8 px-4 flex 
+          ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"}
+        `}
+      >
+        <Link href="/" className="flex items-center space-x-3 overflow-hidden">
+          <Image
+            className="dark:hidden flex-shrink-0"
+            src="/images/logo/logo-icon.svg"
+            alt="Logo"
+            width={32}
+            height={32}
+          />
+          {(isExpanded || isHovered || isMobileOpen) && (
+            <h1 className="dark:text-white/90 text-2xl whitespace-nowrap overflow-hidden text-ellipsis">
+              Doctor's App
+            </h1>
           )}
         </Link>
       </div>

@@ -1,10 +1,15 @@
 "use client"
-import { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchPatients } from '@/store/slices/patientSlice';
+import { useEffect, useState,useRef } from 'react';
+// import { useSelector, useDispatch } from 'react-redux';
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchPatients,deletePatient  } from '@/store/slices/patientSlice';
 import { RootState, AppDispatch } from '@/store/store';
-import { usePathname } from 'next/navigation';
-
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import Pagination from "@/components/pagination/Pagination";
+import EditPatientModal from "@/components/modal/EditPatientModal";
+import DisplayPatientModal from "@/components/modal/displayDetails";
+import Swal from 'sweetalert2';
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -13,14 +18,11 @@ import {
   TableRow,
 } from "../ui/table";
 
-// import Badge from "../ui/badge/Badge";
-// import Image from "next/image";
 import { PatientData } from '@/lib/api'; // or wherever you define it
 import { format } from "date-fns";
 
 interface BasicTableOneProps {
   data: PatientData[];
-  // total: number | null;
 }
 
 interface Order {
@@ -126,18 +128,54 @@ const tableData: Order[] = [
 
 // const BasicTableOne: React.FC<BasicTableOneProps> = () => {
 export default function BasicTableOne() {
-  
+  const [selectedPatient, setSelectedPatient] = useState<PatientData | null>(null);  
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [displayModalOpen, setDisplayModalOpen] = useState(false);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentPageFromURL = parseInt(searchParams.get('page') || '1');
+  const [page, setPage] = useState(currentPageFromURL);
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "MMMM d, yyyy, h:mm a");
   };
   const pathname = usePathname();
-    const dispatch = useDispatch<AppDispatch>();
-    const [search, setSearch] = useState('');
-    const { data, total, current_page, loading, error } = useSelector((state: RootState) => state.patients);
-    
-    useEffect(() => {
-      dispatch(fetchPatients({ page: 1, search }));
-    }, [dispatch]);
+  // const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
+  const [search, setSearch] = useState('');
+  const {user} = useAppSelector((state) => state.user);
+  const roles = useAppSelector((state) => state.user.roles);
+  const { data, total, current_page, loading, error } = useAppSelector((state) => state.patients);
+  const isDoctorOrAdmin = roles.includes("doctor") || roles.includes("admin");
+  const isDashboard = pathname === "/";
+  
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const tabs = [
+    {
+      id: "patient-tab",
+      title: "Patient Info",
+      content: "Patient",
+    },
+    {
+      id: "progress-tab",
+      title: "Progress Note",
+      content: "Progress Note",
+    },
+  ];
+  
+  useEffect(() => {
+      // if (current_page && current_page !== page) {
+      //     setPage(current_page);
+      // }
+    // 
+    const newPage = parseInt(searchParams.get('page') || '1');
+    if (newPage !== page) setPage(newPage);
+    dispatch(fetchPatients({ page, search }));
+    }, [dispatch,searchParams]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
@@ -145,8 +183,61 @@ export default function BasicTableOne() {
   };
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    dispatch(fetchPatients({ page: 1, search }));
-    console.log("se",search)
+    dispatch(fetchPatients({ page:0, search }));
+    // console.log("se",search)
+  };
+
+    const handleEdit = (patient: PatientData) => {
+      document.getElementById("editPatient")?.style.setProperty("display", "block");
+      setSelectedPatient(patient);
+      setEditModalOpen(true);
+      // router.push(`/patients/edit/${id}`);
+    };
+  
+  const handleUpdateSave = async (updated: PatientData) => {
+      console.log("handleUpdateSave",updated)
+  };
+  
+  const displayPatient = (patient: PatientData) => {
+    setSelectedPatient(patient);
+    setDisplayModalOpen(true);
+  }
+
+  const handleDelete = async (id?: number) => {
+        if (id === undefined) return;
+        Swal.fire({
+          title: 'Are you sure?',
+          text: 'This action cannot be undone!',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, delete it!',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(deletePatient(id));
+          }
+        });
+  };
+  
+  const onMouseDown = (e: React.MouseEvent) => {
+    const slider = scrollRef.current;
+    if (!slider) return;
+    setIsDragging(true);
+    setStartX(e.pageX - slider.offsetLeft);
+    setScrollLeft(slider.scrollLeft);
+  };
+
+  const onMouseLeaveOrUp = () => {
+    setIsDragging(false);
+  };
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const slider = scrollRef.current;
+    if (!slider) return;
+    const x = e.pageX - slider.offsetLeft;
+    const walk = (x - startX) * 1.5; // Adjust scroll speed
+    slider.scrollLeft = scrollLeft - walk;
   };
   
   return (
@@ -208,18 +299,40 @@ export default function BasicTableOne() {
             </form>  
         </div>
       )}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
         <div className="max-w-full overflow-y-auto overflow-x-auto">
-          <div className="w-full overflow-x-auto">
+          <div 
+               ref={scrollRef}
+              onMouseDown={onMouseDown}
+              onMouseUp={onMouseLeaveOrUp}
+              onMouseLeave={onMouseLeaveOrUp}
+              onMouseMove={onMouseMove}
+              className="cursor-grab overflow-hidden w-full border rounded-lg"
+              style={{ overflowX: "auto", whiteSpace: "nowrap" }}
+          >
+             {/* {loading && (
+                  <div className="flex justify-center py-4">
+                    <Spinner />
+                  </div>
+              )} */}
+            {loading ? <PatientsSkeletonTable /> : 
             <Table>
-              {/* Table Header */}
-              <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                {data && data.length > 0 ? (
+                  <>
+              <TableHeader className="bg-gray-100 border-b border-gray-100 dark:border-white/[0.05]">
                 <TableRow>
+                  {isDoctorOrAdmin && !isDashboard && (
                   <TableCell
                     isHeader
                     className="px-5 py-3 font-bold text-gray-800 text-start text-theme-xs dark:text-gray-400"
                   >
-                    Date Created
+                    Actions
+                  </TableCell>)}
+                  <TableCell
+                    isHeader
+                    className="px-5 py-3 font-bold text-gray-800 text-start text-theme-xs dark:text-gray-400"
+                  >
+                    No.
                   </TableCell>
                   <TableCell
                     isHeader
@@ -267,7 +380,7 @@ export default function BasicTableOne() {
                     isHeader
                     className="px-5 py-3 font-bold text-gray-800 text-start text-theme-xs dark:text-gray-400"
                   >
-                    NOS
+                    ROS
                   </TableCell>
                   <TableCell
                     isHeader
@@ -335,25 +448,44 @@ export default function BasicTableOne() {
                   >
                     ANESTHESIOLOGIST
                   </TableCell> 
+                  <TableCell
+                    isHeader
+                    className="px-5 py-3 font-bold text-gray-800 text-start text-theme-xs dark:text-gray-400"
+                  >
+                    Date Created
+                  </TableCell>
                 </TableRow>
               </TableHeader>
 
-              {/* Table Body */}
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                {/* {data.map((i) => (
-                  <p>{i.first_name}</p>
-                )) } */}
                 {data
                   .filter((p) => p.created_at)
                   .slice()
                   .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
                   .map((i) => (
                   <TableRow key={i.id}>
+                    {isDoctorOrAdmin && !isDashboard && (
+                    <TableCell className="px-4 py-3 text-start">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit(i)}
+                          className="px-2 py-1 text-xs text-white bg-green-600 rounded hover:bg-green-700"
+                        >
+                              Edit {i.id}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(i.id)}
+                          className="px-2 py-1 text-xs text-white bg-red-600 rounded hover:bg-red-700"
+                        >
+                          X
+                        </button>
+                      </div>
+                    </TableCell>  )}
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.created_at && (formatDate(i.created_at))}
+                      {i.id}
                     </TableCell>
-                    <TableCell className="px-5 py-4 sm:px-6 text-start">
-                      <div className="flex items-center gap-3">
+                    <TableCell className="px-5 py-4 sm:px-6 text-start cursor-pointer"  onClick={() => displayPatient(i)}>
+                      <div className="flex items-center gap-3 ">
                         {/* <div className="w-10 h-10 overflow-hidden rounded-full">
                           <Image
                             src={i.sex?.toLowerCase().trim() === "male" ? "/images/icons/man.png" : "/images/icons/female.png"}
@@ -364,9 +496,9 @@ export default function BasicTableOne() {
                           />
                         </div> */}
                         <div>
-                          <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                          <Link href="#" className="block underline font-medium text-gray-800 text-theme-sm dark:text-white/90">
                             {i.first_name} {i.last_name} 
-                          </span>
+                          </Link>
                           {/* <span className="block text-gray-500 text-theme-xs dark:text-gray-400">
                             {order.user.role}
                           </span> */}
@@ -386,47 +518,50 @@ export default function BasicTableOne() {
                       {i.telephone_number}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.chief_complaint}
+                      {i.chief_complaint ?? 'N/A'}
                     </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.hpi}
+                      {i.hpi ?? 'N/A' }
                     </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.nos}
+                      {i.nos ?? 'N/A'}
                     </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.pmhx}
+                      {i.pmhx ?? 'N/A'}
                     </TableCell>
                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.pe}
+                      {i.pe ?? 'N/A'}
                     </TableCell>
                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.lab_diagnostic}
+                      {i.lab_diagnostic ?? 'N/A'}
                     </TableCell>
                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.impression}
+                      {i.impression ?? 'N/A'}
                     </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.treatment_plan}
+                      {i.treatment_plan ?? 'N/A'}
                     </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.surgical_procedure}
+                      {i.surgical_procedure ?? 'N/A'}
                     </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.surgery_date}
+                      {i.surgery_date ?? 'N/A'}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.surgery_place}
+                      {i.surgery_place ?? 'N/A'}
                     </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.on_findings}
+                      {i.on_findings ?? 'N/A'}
                     </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.histopath}
+                      {i.histopath ?? 'N/A'}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {i.anesthesiologist}
-                    </TableCell> 
+                      {i.anesthesiologist ?? 'N/A'}
+                      </TableCell> 
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      {i.created_at && (formatDate(i.created_at))}
+                    </TableCell>
                     {/* <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                       <div className="flex -space-x-2">
                         {order.team.images.map((teamImage, index) => (
@@ -463,14 +598,136 @@ export default function BasicTableOne() {
                       {order.budget}
                     </TableCell> */}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                  ))}
+                </TableBody>
+                </>
+                ) : (
+                    <TableBody>
+                  <TableRow>
+                    <TableCell className="px-4 py-6 text-center text-gray-500">
+                      No patient found.
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              )}
+              </Table>
+            }
           </div>
         </div>
       </div>
+      {data && data.length > 0 && (
+        <Pagination
+          page={page}
+          total={total || 0}
+          perPage={10}
+          onPageChange={(newPage: number) => {
+            setPage(newPage);
+            dispatch(fetchPatients({ page: newPage, search }));
+          }}
+        />
+      )}
+
+        {/* {!loading && total && (
+            <div className="flex justify-center items-center mt-4 space-x-2">
+              {Array.from({ length: Math.ceil(total / 10) }, (_, index) => {
+                  const pageNumber = index + 1;
+                  return (
+                    <button
+                      key={pageNumber}
+                      onClick={() => {
+                        const newParams = new URLSearchParams(searchParams);
+                        newParams.set('page', pageNumber.toString());
+                        router.push(`?${newParams.toString()}`);
+                        setPage(pageNumber)
+                        // dispatch(fetchPatients({ page, search }));
+                      }}
+                      className={`px-3 py-1 rounded-md border transition-colors duration-200 ${
+                        page === pageNumber
+                          ? 'bg-blue-600 text-white border-blue-700'
+                          : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300'
+                      }`}
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                })}
+            </div>
+        )} */}
+      
+      <EditPatientModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        patient={selectedPatient}
+        onSave={handleUpdateSave}
+      />
+      <DisplayPatientModal
+        isOpen={displayModalOpen}
+        onClose={() => setDisplayModalOpen(false)}
+        patient={selectedPatient}
+        tabs={tabs}
+        userId={user?.id as number}
+      />
+  
     </div>
   );
 }
 
-// export default BasicTableOne;
+function Spinner() {
+  return (
+    <div className="flex flex-col items-center justify-center py-10">
+      {/* <FaSpinner className="animate-spin text-blue-500 text-4xl mb-4" /> */}
+      <span className='text-4xl mb-4' style={{ display: 'inline-block', width: 20, height: 20, border: '2px solid #ccc', borderTopColor: '#333', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <p className="text-sm text-gray-600">Loading patients...</p>
+    </div>
+    );
+}
+const PatientsSkeleton = () => {
+  return (
+    <div className="space-y-2 mt-6">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="animate-pulse flex items-center gap-4 p-4 border rounded-lg">
+          <div className="h-10 w-10 bg-gray-300 rounded-full"></div>
+          <div className="flex-1">
+            <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+const PatientsSkeletonTable = () => {
+  return (
+    <div className="overflow-x-auto mt-6">
+      <table className="min-w-full border-collapse">
+        {/* <thead>
+          <tr className="bg-gray-100 text-left">
+            <th className="p-3 text-sm font-medium text-gray-700">Name</th>
+            <th className="p-3 text-sm font-medium text-gray-700">Age</th>
+            <th className="p-3 text-sm font-medium text-gray-700">Gender</th>
+            <th className="p-3 text-sm font-medium text-gray-700">Status</th>
+          </tr>
+        </thead> */}
+        <tbody>
+          {[...Array(10)].map((_, i) => (
+            <tr key={i} className="animate-pulse border-t">
+              <td className="p-3">
+                <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+              </td>
+              <td className="p-3">
+                <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+              </td>
+              <td className="p-3">
+                <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+              </td>
+              <td className="p-3">
+                <div className="h-4 bg-gray-300 rounded w-2/3"></div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
